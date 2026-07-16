@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Block Poster for Chrome</title>
+    <meta
+      name="description"
+      content="Pick an image or capture part of a web page, then turn it into a printable tiled poster PDF with Block Poster for Chrome."
+    />
+    <meta name="theme-color" content="#17171c" />
+    <meta property="og:title" content="Block Poster for Chrome" />
+    <meta
+      property="og:description"
+      content="Turn images from any web page into printable tiled poster PDFs."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:url"
+      content="https://felixliu0806.github.io/block-poster-chrome-extension/"
+    />
+    <link rel="icon" href="https://blockposter.pro/favicon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="https://blockposter.pro/" rel="home">
+        <span class="brand-mark">B</span>
+        <span>Block Poster</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="https://blockposter.pro/">Website</a>
+        <a href="https://blockposter.pro/block-poster-chrome-extension"
+          >Extension guide</a
+        >
+        <a href="https://github.com/felixliu0806/block-poster-chrome-extension"
+          >Source</a
+        >
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Chrome extension · Manifest V3</span>
+          <h1>Turn any web image into a printable wall poster.</h1>
+          <p>
+            Pick a visible image, capture part of a page, upload a file, or
+            paste from your clipboard. Block Poster splits it across ordinary
+            printer paper directly in Chrome.
+          </p>
+          <div class="hero-actions">
+            <a class="button primary" href="https://blockposter.pro/"
+              >Open Block Poster</a
+            >
+            <a
+              class="button secondary"
+              href="https://blockposter.pro/block-poster-chrome-extension"
+              >Read the extension guide</a
+            >
+          </div>
+          <div class="trust-row">
+            <span>No poster history</span>
+            <span>Local PDF rendering</span>
+            <span>Free single-image workflow</span>
+          </div>
+        </div>
+
+        <div class="panel-shell" aria-label="Block Poster side panel preview">
+          <div class="panel-top">
+            <span class="mini-brand"><b>B</b> Block Poster</span>
+            <span class="plan">Free</span>
+          </div>
+          <div class="panel-content">
+            <div class="panel-heading"><b>1</b> Choose an image</div>
+            <div class="action-grid">
+              <span class="active">Pick from page</span>
+              <span>Capture area</span>
+              <span>Upload image</span>
+              <span>Paste image</span>
+            </div>
+            <div class="preview">
+              <div class="poster-shape"></div>
+              <p>Your selected image appears here</p>
+            </div>
+            <div class="panel-heading"><b>2</b> Print setup</div>
+            <div class="settings-row"><span>A4</span><span>Portrait</span></div>
+            <div class="range"><i></i></div>
+            <div class="download">Download printable PDF</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="workflow" aria-labelledby="workflow-title">
+        <span class="section-label">Simple workflow</span>
+        <h2 id="workflow-title">From browser to printer in three steps</h2>
+        <div class="cards">
+          <article>
+            <span>01</span>
+            <h3>Pick</h3>
+            <p>Click a page image or draw a capture region over anything visible.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Configure</h3>
+            <p>Choose paper, poster width, margins, overlap, and cut marks.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Print</h3>
+            <p>Download the tiled PDF and print every sheet at actual size.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="plans" aria-labelledby="plans-title">
+        <div>
+          <span class="section-label">Free</span>
+          <h2 id="plans-title">Everything needed for one poster</h2>
+          <ul>
+            <li>Pick, capture, upload, or paste an image</li>
+            <li>Configure the complete print layout</li>
+            <li>Download a watermarked tiled PDF</li>
+          </ul>
+        </div>
+        <div class="pro-card">
+          <span class="section-label gold">Pro & Lifetime</span>
+          <h2>Clean exports and batch mode</h2>
+          <ul>
+            <li>Remove the Block Poster watermark</li>
+            <li>Scan and filter images on the current page</li>
+            <li>Download up to 20 poster PDFs in one ZIP</li>
+          </ul>
+          <a href="https://blockposter.pro/pricing">View plans on Block Poster</a>
+        </div>
+      </section>
+
+      <section class="privacy">
+        <span class="section-label">Privacy by design</span>
+        <h2>Your poster is a session, not a history.</h2>
+        <p>
+          Source images, PDFs, and ZIP files are processed locally in the
+          extension session. Account connection uses a scoped token rather than
+          exposing your password or website cookies.
+        </p>
+        <div>
+          <a href="https://blockposter.pro/privacy-policy">Privacy policy</a>
+          <a href="https://blockposter.pro/support">Support</a>
+          <a href="https://blockposter.pro/">Block Poster homepage</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Block Poster for Chrome is a companion to
+        <a href="https://blockposter.pro/">Block Poster Pro</a>.
+      </p>
+      <a href="https://github.com/felixliu0806/block-poster-chrome-extension"
+        >View source on GitHub</a
+      >
+    </footer>
+  </body>
+</html>

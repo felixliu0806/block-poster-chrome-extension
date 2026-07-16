@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Block Poster</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">B</span><span>Block Poster</span>
+      </div>
+      <div class="account-area">
+        <button id="accountButton" class="account-button" type="button">
+          Connect
+        </button>
+        <div id="accountMenu" class="account-menu hidden">
+          <button id="refreshAccountButton" type="button">
+            Refresh membership
+          </button>
+          <button id="disconnectButton" class="danger" type="button">
+            Disconnect account
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="sourceSection" class="section">
+        <div class="section-heading">
+          <div>
+            <span class="step">1</span>
+            <h1>Choose an image</h1>
+          </div>
+          <span class="free-badge">Free</span>
+        </div>
+        <div class="action-grid">
+          <button
+            id="pickImageButton"
+            class="source-button primary"
+            type="button"
+          >
+            <span>◉</span>Pick from page
+          </button>
+          <button id="captureButton" class="source-button" type="button">
+            <span>⌗</span>Capture area
+          </button>
+          <button id="uploadButton" class="source-button" type="button">
+            <span>↑</span>Upload image
+          </button>
+          <button id="pasteButton" class="source-button" type="button">
+            <span>⌘</span>Paste image
+          </button>
+        </div>
+        <input
+          id="fileInput"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          hidden
+        />
+
+        <div id="emptyState" class="empty-state">
+          <div class="empty-icon">▧</div>
+          <p>Pick an image on the page or capture any visible area.</p>
+        </div>
+        <div id="previewCard" class="preview-card hidden">
+          <img id="sourcePreview" alt="Selected poster source" />
+          <div class="preview-meta">
+            <div>
+              <strong id="sourceName">Selected image</strong
+              ><span id="sourceSize"></span>
+            </div>
+            <button id="clearButton" type="button" aria-label="Remove image">
+              ×
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="settingsSection" class="section disabled-section">
+        <div class="section-heading">
+          <div>
+            <span class="step">2</span>
+            <h2>Print setup</h2>
+          </div>
+        </div>
+        <div class="field-row">
+          <label
+            >Paper<select id="paperSelect">
+              <option value="a4">A4</option>
+              <option value="letter">US Letter</option>
+              <option value="a3">A3</option>
+              <option value="legal">Legal</option>
+              <option value="tabloid">Tabloid</option>
+              <option value="a2">A2</option>
+            </select></label
+          >
+          <label
+            >Orientation<select id="orientationSelect">
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select></label
+          >
+        </div>
+        <label class="range-label"
+          ><span>Pages wide <strong id="pagesWideValue">3</strong></span
+          ><input id="pagesWideInput" type="range" min="1" max="8" value="3"
+        /></label>
+        <div class="field-row compact">
+          <label
+            >Margin (mm)<input
+              id="marginInput"
+              type="number"
+              min="0"
+              max="30"
+              value="5"
+          /></label>
+          <label
+            >Overlap (mm)<input
+              id="overlapInput"
+              type="number"
+              min="0"
+              max="30"
+              value="8"
+          /></label>
+        </div>
+        <div class="summary">
+          <span>Poster layout</span
+          ><strong id="layoutSummary">3 × 3 · 9 sheets</strong>
+        </div>
+        <label class="check-row"
+          ><input id="cutMarksInput" type="checkbox" checked /><span
+            >Include cut marks and page labels</span
+          ></label
+        >
+      </section>
+
+      <section id="exportSection" class="section disabled-section">
+        <div class="section-heading">
+          <div>
+            <span class="step">3</span>
+            <h2>Export PDF</h2>
+          </div>
+        </div>
+        <button id="freeExportButton" class="export-button" type="button">
+          Download free PDF<span>Includes a Block Poster watermark</span>
+        </button>
+        <button id="cleanExportButton" class="clean-button" type="button">
+          Download without watermark <span>✦</span>
+        </button>
+      </section>
+
+      <section class="section batch-section">
+        <div class="section-heading">
+          <div>
+            <span class="step premium">✦</span>
+            <h2>Batch mode</h2>
+          </div>
+          <span class="pro-badge">Pro</span>
+        </div>
+        <p class="section-copy">
+          Find the useful images on this page and create multiple posters at
+          once.
+        </p>
+        <button id="scanButton" class="scan-button" type="button">
+          Scan current page
+        </button>
+        <div id="scanResults" class="scan-results hidden"></div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast hidden" role="status"></div>
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

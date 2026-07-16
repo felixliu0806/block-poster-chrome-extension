@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Block Poster",
+  "description": "Turn images from any web page or screen capture into printable tiled poster PDFs.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "activeTab",
+    "clipboardRead",
+    "contextMenus",
+    "downloads",
+    "scripting",
+    "sidePanel",
+    "storage"
+  ],
+  "host_permissions": ["https://blockposter.pro/*", "http://localhost/*"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Open Block Poster"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://blockposter.pro/*", "http://localhost/*"],
+      "js": ["connect-bridge.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
