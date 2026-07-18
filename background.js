@@ -1,4 +1,3 @@
-const PANEL_PATH = "sidepanel.html";
 const PAGE_ACCESS_HELP =
   "Access needed. Keep this website tab active, click the Block Poster toolbar icon, then try again. Or right-click the page and choose ‘Create a Block Poster’. Chrome settings and Web Store pages cannot be captured.";
 
@@ -20,13 +19,15 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     srcUrl: info.srcUrl || null,
     createdAt: Date.now(),
   };
-  await chrome.storage.session.set({ pendingContextAction: action });
-  await chrome.sidePanel.setOptions({
-    tabId: tab.id,
-    path: PANEL_PATH,
-    enabled: true,
+
+  // Chrome only permits sidePanel.open() during the original user gesture.
+  // Start it before awaiting storage or any other asynchronous work.
+  const storeAction = chrome.storage.session.set({
+    pendingContextAction: action,
   });
-  await chrome.sidePanel.open({ tabId: tab.id });
+  const openPanel = chrome.sidePanel.open({ windowId: tab.windowId });
+
+  await Promise.all([storeAction, openPanel]);
   await chrome.runtime
     .sendMessage({
       type: "CONTEXT_ACTION_AVAILABLE",
