@@ -1,4 +1,6 @@
 const PANEL_PATH = "sidepanel.html";
+const PAGE_ACCESS_HELP =
+  "Access needed. Keep this website tab active, click the Block Poster toolbar icon, then try again. Or right-click the page and choose ‘Create a Block Poster’. Chrome settings and Web Store pages cannot be captured.";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -30,16 +32,28 @@ async function getActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) throw new Error("No active browser tab was found.");
   if (!tab.url || !/^https?:/i.test(tab.url)) {
-    throw new Error("Chrome does not allow extensions to capture this page.");
+    throw new Error(PAGE_ACCESS_HELP);
   }
   return tab;
 }
 
 async function ensureCaptureScript(tabId) {
-  await chrome.scripting.executeScript({
-    target: { tabId },
-    files: ["content.js"],
-  });
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId },
+      files: ["content.js"],
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (
+      /cannot access|missing host permission|permission|extensions gallery/i.test(
+        message,
+      )
+    ) {
+      throw new Error(PAGE_ACCESS_HELP);
+    }
+    throw error;
+  }
 }
 
 async function sendToActiveTab(type) {
@@ -51,7 +65,9 @@ async function sendToActiveTab(type) {
 async function sendToTab(tabId, type, payload = {}) {
   const tab = await getActiveTab();
   if (tab.id !== tabId) {
-    throw new Error("Return to the page where you opened Block Poster.");
+    throw new Error(
+      "This is a different tab. Return to the page where you opened Block Poster, or click the Block Poster toolbar icon on this tab.",
+    );
   }
   await ensureCaptureScript(tabId);
   const result = await chrome.tabs.sendMessage(tabId, { type, ...payload });
@@ -79,7 +95,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       case "CAPTURE_VISIBLE_TAB": {
         const tab = await getActiveTab();
         if (message.tabId && tab.id !== message.tabId) {
-          throw new Error("Return to the page where you selected the image.");
+          throw new Error(
+            "This is a different tab. Return to the page where you selected the image, or start again from this tab.",
+          );
         }
         return chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
       }

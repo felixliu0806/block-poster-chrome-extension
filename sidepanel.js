@@ -65,7 +65,7 @@ function showToast(message, error = false) {
   elements.toast.classList.remove("hidden");
   state.toastTimer = setTimeout(
     () => elements.toast.classList.add("hidden"),
-    4200,
+    error ? 8000 : 4200,
   );
 }
 
