@@ -393,6 +393,12 @@ input[type="range"] {
   display: flex;
   gap: 7px;
 }
+.scan-batch-help {
+  grid-column: 1/-1;
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
 .scan-actions button {
   flex: 1;
   padding: 8px;

@@ -587,7 +587,7 @@ async function fetchBatchSource(image, index) {
   };
 }
 
-async function createBatch(button) {
+async function downloadBatchZip(button) {
   const selected = [...state.scanSelected]
     .slice(0, 20)
     .map((index) => state.scanImages[index])
@@ -762,6 +762,7 @@ function renderScanResults() {
       label.classList.toggle("selected", checkbox.checked);
       updateEditorAvailability();
       updateLayoutSummary();
+      download.disabled = state.scanSelected.size === 0;
     });
     label.append(preview, checkbox);
     elements.scanResults.append(label);
@@ -775,11 +776,17 @@ function renderScanResults() {
     state.scanSelected = new Set(state.scanImages.map((_, index) => index));
     renderScanResults();
   });
-  const create = document.createElement("button");
-  create.type = "button";
-  create.textContent = "Create batch";
-  create.addEventListener("click", () => createBatch(create));
-  actions.append(all, create);
+  const help = document.createElement("p");
+  help.className = "scan-batch-help";
+  help.textContent =
+    "Select images, adjust Print setup below, then download the batch.";
+  const download = document.createElement("button");
+  download.type = "button";
+  download.textContent = "Download batch ZIP";
+  download.disabled = state.scanSelected.size === 0;
+  download.addEventListener("click", () => downloadBatchZip(download));
+  elements.scanResults.append(help);
+  actions.append(all, download);
   elements.scanResults.append(actions);
   elements.scanResults.classList.remove("hidden");
   updateEditorAvailability();
