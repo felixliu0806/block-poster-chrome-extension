@@ -1,5 +1,7 @@
 const APP_ORIGIN = "https://blockposter.pro";
 const MM_TO_PT = 72 / 25.4;
+const FREE_BATCH_LIMIT = 5;
+const MEMBER_BATCH_LIMIT = 20;
 const PAPERS = {
   a4: { label: "A4", widthMm: 210, heightMm: 297 },
   letter: { label: "US Letter", widthMm: 215.9, heightMm: 279.4 },
@@ -588,17 +590,28 @@ async function fetchBatchSource(image, index) {
 }
 
 async function downloadBatchZip(button) {
-  const selected = [...state.scanSelected]
-    .slice(0, 20)
-    .map((index) => state.scanImages[index])
-    .filter(Boolean);
-  if (!selected.length) {
+  if (!state.scanSelected.size) {
     showToast("Select at least one image first.", true);
     return;
   }
   const original = button.textContent;
   button.disabled = true;
+  let selectionWasCapped = false;
   try {
+    if (state.authToken) {
+      button.textContent = "Checking membership…";
+      await refreshEntitlement();
+    }
+    const memberBatch = hasBatchAccess();
+    const limit = getBatchLimit();
+    const selectedIndexes = [...state.scanSelected];
+    if (selectedIndexes.length > limit) {
+      state.scanSelected = new Set(selectedIndexes.slice(0, limit));
+      selectionWasCapped = true;
+    }
+    const selected = [...state.scanSelected]
+      .map((index) => state.scanImages[index])
+      .filter(Boolean);
     button.textContent = "Requesting access…";
     const granted = await requestImageOrigins(selected);
     if (!granted)
@@ -608,7 +621,7 @@ async function downloadBatchZip(button) {
       button.textContent = `Building ${index + 1}/${selected.length}…`;
       const source = await fetchBatchSource(selected[index], index);
       try {
-        const output = await renderPosterPdf(source, false);
+        const output = await renderPosterPdf(source, !memberBatch);
         files.push({ blob: output.blob, name: output.filename });
       } finally {
         revokeSource(source);
@@ -620,22 +633,28 @@ async function downloadBatchZip(button) {
       zip,
       `block-poster-batch-${new Date().toISOString().slice(0, 10)}.zip`,
     );
-    showToast(`${files.length} watermark-free posters downloaded as a ZIP.`);
+    showToast(
+      memberBatch
+        ? `${files.length} watermark-free posters downloaded as a ZIP.`
+        : `${files.length} free posters downloaded with watermarks.`,
+    );
   } catch (error) {
     showToast(error.message || "Batch export failed.", true);
   } finally {
     button.disabled = false;
     button.textContent = original;
+    if (selectionWasCapped) renderScanResults();
   }
 }
 
 async function exportCurrent(clean) {
   if (!state.source) return;
-  if (clean && state.authToken && !state.entitlement.removeWatermark) {
+  if (clean && state.authToken) {
     try {
       await refreshEntitlement();
     } catch {
-      // The normal clean-export branch below will offer reconnection or upgrade.
+      showToast("Unable to verify membership. Please try again.", true);
+      return;
     }
   }
   if (clean && !state.entitlement.removeWatermark) {
@@ -701,6 +720,10 @@ function hasBatchAccess() {
   );
 }
 
+function getBatchLimit() {
+  return hasBatchAccess() ? MEMBER_BATCH_LIMIT : FREE_BATCH_LIMIT;
+}
+
 function updateAccountUi() {
   if (!state.authToken) {
     elements.accountButton.textContent = "Connect";
@@ -757,8 +780,20 @@ function renderScanResults() {
     preview.src = image.src;
     preview.alt = image.name;
     checkbox.addEventListener("change", () => {
-      if (checkbox.checked) state.scanSelected.add(index);
-      else state.scanSelected.delete(index);
+      if (checkbox.checked) {
+        const limit = getBatchLimit();
+        if (state.scanSelected.size >= limit) {
+          checkbox.checked = false;
+          showToast(
+            hasBatchAccess()
+              ? `A batch can include up to ${MEMBER_BATCH_LIMIT} images.`
+              : `Free batches include up to ${FREE_BATCH_LIMIT} images. Pro and Lifetime include ${MEMBER_BATCH_LIMIT}.`,
+            true,
+          );
+          return;
+        }
+        state.scanSelected.add(index);
+      } else state.scanSelected.delete(index);
       label.classList.toggle("selected", checkbox.checked);
       updateEditorAvailability();
       updateLayoutSummary();
@@ -771,15 +806,20 @@ function renderScanResults() {
   actions.className = "scan-actions";
   const all = document.createElement("button");
   all.type = "button";
-  all.textContent = "Select all";
+  all.textContent = `Select all (max ${getBatchLimit()})`;
   all.addEventListener("click", () => {
-    state.scanSelected = new Set(state.scanImages.map((_, index) => index));
+    state.scanSelected = new Set(
+      state.scanImages
+        .slice(0, getBatchLimit())
+        .map((_, index) => index),
+    );
     renderScanResults();
   });
   const help = document.createElement("p");
   help.className = "scan-batch-help";
-  help.textContent =
-    "Select images, adjust Print setup below, then download the batch.";
+  help.textContent = hasBatchAccess()
+    ? `Member batch: up to ${MEMBER_BATCH_LIMIT} watermark-free posters.`
+    : `Free batch: up to ${FREE_BATCH_LIMIT} posters with watermarks. Pro & Lifetime: ${MEMBER_BATCH_LIMIT} without watermarks.`;
   const download = document.createElement("button");
   download.type = "button";
   download.textContent = "Download batch ZIP";
@@ -794,23 +834,6 @@ function renderScanResults() {
 }
 
 async function scanPage() {
-  if (state.authToken && !hasBatchAccess()) {
-    try {
-      await refreshEntitlement();
-    } catch {
-      // Continue to the normal connection or upgrade path below.
-    }
-  }
-  if (!hasBatchAccess()) {
-    if (!state.authToken) await connectAccount();
-    else
-      await sendMessage({
-        type: "OPEN_TAB",
-        url: `${APP_ORIGIN}/pricing?utm_source=chrome_extension&utm_content=batch`,
-      });
-    showToast("Batch page scanning is available with Pro and Lifetime.");
-    return;
-  }
   const original = elements.scanButton.innerHTML;
   try {
     elements.scanButton.disabled = true;
@@ -848,6 +871,7 @@ chrome.runtime.onMessage.addListener((message) => {
         await chrome.storage.session.remove("pendingConnectNonce");
         try {
           await refreshEntitlement();
+          if (state.scanImages.length) renderScanResults();
           showToast("Block Poster account connected.");
         } catch (error) {
           showToast(error.message || "Account connection failed.", true);
@@ -916,6 +940,7 @@ elements.refreshAccountButton.addEventListener("click", async () => {
   elements.accountMenu.classList.add("hidden");
   try {
     await refreshEntitlement();
+    if (state.scanImages.length) renderScanResults();
     showToast("Membership refreshed.");
   } catch (error) {
     showToast(error.message || "Unable to refresh membership.", true);
@@ -932,6 +957,12 @@ elements.disconnectButton.addEventListener("click", async () => {
   await chrome.storage.local.remove("extensionAuthToken");
   elements.accountMenu.classList.add("hidden");
   updateAccountUi();
+  if (state.scanSelected.size > FREE_BATCH_LIMIT) {
+    state.scanSelected = new Set(
+      [...state.scanSelected].slice(0, FREE_BATCH_LIMIT),
+    );
+  }
+  if (state.scanImages.length) renderScanResults();
   showToast("Block Poster account disconnected.");
 });
 document.addEventListener("click", (event) => {

@@ -16,13 +16,13 @@ Block Poster PDFs.
 - Upload or paste an image from the clipboard.
 - Configure the existing Block Poster print options in a Chrome side panel.
 - Preview and export a watermarked PDF.
+- Scan the current page and export up to 5 watermarked posters in one ZIP.
 
 ### Paid workflow
 
 - Export without the Block Poster watermark.
-- Scan the current page for usable images.
-- Filter, select, and process multiple images as one batch.
-- Download the current batch without creating a saved project or history.
+- Select and process up to 20 images as one batch.
+- Download a watermark-free batch without creating a saved project or history.
 
 ### Explicit non-goals
 
@@ -44,12 +44,13 @@ capture region.
 5. Download a free watermarked PDF or use an existing paid entitlement for a
    clean export.
 
-Paid members also get a page scanner that presents eligible images in the side
-panel, filters icons and duplicates, and allows a bounded batch to be exported.
+The page scanner presents eligible images in the side panel and filters icons
+and duplicates. Free users can export up to 5 watermarked posters per batch;
+Pro and Lifetime members can export up to 20 without watermarks.
 
 The page context menu provides a permission-friendly shortcut. Right-clicking
 an image opens the side panel and imports that rendered image. Right-clicking
-the page background opens the side panel and starts the paid page scan. Both
+the page background opens the side panel and starts the page scan. Both
 actions use Chrome's temporary `activeTab` grant for the page where the menu was
 invoked.
 
@@ -62,7 +63,8 @@ invoked.
 - Existing poster entitlements (`single`, `pro`, and `lifetime`) should be
   reused rather than duplicated in extension storage.
 - Single-export credit is consumed only for a successful clean export.
-- Pro and lifetime plans unlock clean exports and batch mode.
+- Pro and lifetime plans unlock clean exports and increase batches from 5
+  watermarked posters to 20 watermark-free posters.
 - Source images and output PDFs are session-only. Any server-side handoff must
   use short-lived storage and expiring URLs.
 
@@ -94,8 +96,8 @@ no extension build step.
   The extension never reads the website's cookies.
 - Existing single-export credits, Pro subscriptions, and Lifetime purchases
   control watermark-free export.
-- Pro and Lifetime users can scan up to 100 eligible page images, select up to
-  20 per batch, and download locally generated PDFs in one ZIP file.
+- Free users can select up to 5 scanned images per batch with watermarks. Pro
+  and Lifetime users can select up to 20 per batch without watermarks.
 - No source, PDF, batch, or generation history is persisted.
 
 ## Load locally

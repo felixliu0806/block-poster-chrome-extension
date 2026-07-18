@@ -26,9 +26,9 @@ The complete single-image workflow is free. Free PDFs include a Block Poster
 watermark. Existing Block Poster purchases and memberships unlock
 watermark-free exports.
 
-Pro and Lifetime members can also scan the current page for useful images,
-filter out small assets and duplicates, select multiple images, and download a
-batch of printable poster PDFs in one ZIP file.
+Everyone can scan the current page for useful images, filter out small assets
+and duplicates, and download up to 5 watermarked posters in one ZIP file. Pro
+and Lifetime members can download up to 20 watermark-free posters per batch.
 
 Block Poster does not save a creation history or upload a gallery of your
 images. Poster rendering happens locally in the extension. Account connection
