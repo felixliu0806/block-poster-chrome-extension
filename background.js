@@ -1,5 +1,7 @@
 const PAGE_ACCESS_HELP =
-  "Access needed. Keep this website tab active, click the Block Poster toolbar icon, then try again. Or right-click the page and choose ‘Create a Block Poster’. Chrome settings and Web Store pages cannot be captured.";
+  "Please reopen Block Poster from the browser toolbar, then try again.";
+const UNSUPPORTED_PAGE_HELP =
+  "Block Poster cannot capture Chrome settings or Chrome Web Store pages. Open a regular website and reopen the extension.";
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -40,7 +42,7 @@ async function getActiveTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) throw new Error("No active browser tab was found.");
   if (!tab.url || !/^https?:/i.test(tab.url)) {
-    throw new Error(PAGE_ACCESS_HELP);
+    throw new Error(UNSUPPORTED_PAGE_HELP);
   }
   return tab;
 }
