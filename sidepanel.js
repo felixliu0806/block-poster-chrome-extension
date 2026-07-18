@@ -364,8 +364,7 @@ async function renderPosterPdf(source, addWatermark) {
           context.stroke();
         }
 
-        const labelPrefix = addWatermark ? "Block Poster - " : "";
-        const label = `${labelPrefix}row ${row + 1}/${layout.pagesHigh}, column ${col + 1}/${layout.pagesWide}`;
+        const label = `row ${row + 1}/${layout.pagesHigh}, column ${col + 1}/${layout.pagesWide}`;
         context.fillStyle = "#52525b";
         context.font = "12px Helvetica, Arial, sans-serif";
         context.fillText(
@@ -376,12 +375,25 @@ async function renderPosterPdf(source, addWatermark) {
       }
       if (addWatermark) {
         context.save();
-        context.translate(pagePxWidth / 2, pagePxHeight / 2);
-        context.rotate(-Math.PI / 6);
-        context.fillStyle = "rgba(24,24,27,.18)";
-        context.textAlign = "center";
-        context.font = "600 44px Helvetica, Arial, sans-serif";
-        context.fillText("BLOCK POSTER", 0, 0);
+        const watermark = "Block Poster Pro";
+        const watermarkFontSize = 9;
+        const watermarkPadding = 4;
+        const watermarkX =
+          pagePxWidth - Math.max(9, Math.round(marginPxX / 2));
+        const watermarkY =
+          pagePxHeight - Math.max(9, Math.round(marginPxY / 2));
+        context.font = `500 ${watermarkFontSize}px Helvetica, Arial, sans-serif`;
+        context.textAlign = "right";
+        const watermarkWidth = context.measureText(watermark).width;
+        context.fillStyle = "rgba(255,255,255,.92)";
+        context.fillRect(
+          watermarkX - watermarkWidth - watermarkPadding,
+          watermarkY - watermarkFontSize - watermarkPadding / 2,
+          watermarkWidth + watermarkPadding * 2,
+          watermarkFontSize + watermarkPadding,
+        );
+        context.fillStyle = "rgba(82,82,91,.72)";
+        context.fillText(watermark, watermarkX, watermarkY);
         context.restore();
       }
       pages.push({
