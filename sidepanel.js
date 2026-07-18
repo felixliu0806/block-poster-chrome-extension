@@ -164,6 +164,10 @@ function updateEditorAvailability() {
     "disabled-section",
     !hasSingleSource,
   );
+  elements.exportSection.classList.toggle(
+    "hidden",
+    !hasSingleSource && hasBatchSelection,
+  );
 }
 
 async function imageDimensions(src) {

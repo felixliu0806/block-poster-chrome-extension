@@ -7,31 +7,25 @@
     <link rel="stylesheet" href="sidepanel.css" />
   </head>
   <body>
-    <header class="topbar">
-      <div class="brand">
-        <span class="brand-mark">B</span><span>Block Poster</span>
-      </div>
-      <div class="account-area">
-        <button id="accountButton" class="account-button" type="button">
-          Connect
-        </button>
-        <div id="accountMenu" class="account-menu hidden">
-          <button id="refreshAccountButton" type="button">
-            Refresh membership
-          </button>
-          <button id="disconnectButton" class="danger" type="button">
-            Disconnect account
-          </button>
-        </div>
-      </div>
-    </header>
-
     <main>
       <section id="sourceSection" class="section">
         <div class="section-heading">
-          <div>
+          <div class="section-title">
             <span class="step">1</span>
             <h1>Choose an image</h1>
+          </div>
+          <div class="account-area">
+            <button id="accountButton" class="account-button" type="button">
+              Connect
+            </button>
+            <div id="accountMenu" class="account-menu hidden">
+              <button id="refreshAccountButton" type="button">
+                Refresh membership
+              </button>
+              <button id="disconnectButton" class="danger" type="button">
+                Disconnect account
+              </button>
+            </div>
           </div>
         </div>
         <div class="action-grid">
@@ -89,7 +83,7 @@
 
       <section id="settingsSection" class="section disabled-section">
         <div class="section-heading">
-          <div>
+          <div class="section-title">
             <span class="step">2</span>
             <h2>Print setup</h2>
           </div>
@@ -147,17 +141,20 @@
 
       <section id="exportSection" class="section disabled-section">
         <div class="section-heading">
-          <div>
+          <div class="section-title">
             <span class="step">3</span>
             <h2>Export PDF</h2>
           </div>
         </div>
-        <button id="freeExportButton" class="export-button" type="button">
-          Download free PDF<span>Includes a Block Poster watermark</span>
-        </button>
-        <button id="cleanExportButton" class="clean-button" type="button">
-          Download without watermark <span>✦</span>
-        </button>
+        <div class="export-actions">
+          <button id="freeExportButton" class="export-button" type="button">
+            Download free PDF
+          </button>
+          <button id="cleanExportButton" class="clean-button" type="button">
+            Download without watermark <span>✦</span>
+          </button>
+        </div>
+        <p class="export-note">Free PDFs include a Block Poster watermark.</p>
       </section>
 
     </main>
