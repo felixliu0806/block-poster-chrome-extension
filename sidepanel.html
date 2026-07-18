@@ -33,7 +33,6 @@
             <span class="step">1</span>
             <h1>Choose an image</h1>
           </div>
-          <span class="free-badge">Free</span>
         </div>
         <div class="action-grid">
           <button
@@ -51,6 +50,13 @@
           </button>
           <button id="pasteButton" class="source-button" type="button">
             <span>⌘</span>Paste image
+          </button>
+          <button
+            id="scanButton"
+            class="source-button scan-source-button"
+            type="button"
+          >
+            <span>▦</span>Scan current page<span class="pro-badge">Pro</span>
           </button>
         </div>
         <input
@@ -76,6 +82,7 @@
             </button>
           </div>
         </div>
+        <div id="scanResults" class="scan-results hidden"></div>
       </section>
 
       <section id="settingsSection" class="section disabled-section">
@@ -151,23 +158,6 @@
         </button>
       </section>
 
-      <section class="section batch-section">
-        <div class="section-heading">
-          <div>
-            <span class="step premium">✦</span>
-            <h2>Batch mode</h2>
-          </div>
-          <span class="pro-badge">Pro</span>
-        </div>
-        <p class="section-copy">
-          Find the useful images on this page and create multiple posters at
-          once.
-        </p>
-        <button id="scanButton" class="scan-button" type="button">
-          Scan current page
-        </button>
-        <div id="scanResults" class="scan-results hidden"></div>
-      </section>
     </main>
 
     <div id="toast" class="toast hidden" role="status"></div>

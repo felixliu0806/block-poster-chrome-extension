@@ -768,6 +768,7 @@ async function scanPage() {
     showToast("Batch page scanning is available with Pro and Lifetime.");
     return;
   }
+  const original = elements.scanButton.innerHTML;
   try {
     elements.scanButton.disabled = true;
     elements.scanButton.textContent = "Scanning…";
@@ -782,7 +783,7 @@ async function scanPage() {
     showToast(error.message || "Unable to scan this page.", true);
   } finally {
     elements.scanButton.disabled = false;
-    elements.scanButton.textContent = "Scan current page";
+    elements.scanButton.innerHTML = original;
   }
 }
 
