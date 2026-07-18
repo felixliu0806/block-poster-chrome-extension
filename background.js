@@ -1,5 +1,5 @@
 const PAGE_ACCESS_HELP =
-  "Please reopen Block Poster from the browser toolbar, then try again.";
+  "Click the Block Poster icon in the browser toolbar once to enable access to this page, then try again.";
 const UNSUPPORTED_PAGE_HELP =
   "Block Poster cannot capture Chrome settings or Chrome Web Store pages. Open a regular website and reopen the extension.";
 
