@@ -3,13 +3,25 @@ const PAGE_ACCESS_HELP =
 const UNSUPPORTED_PAGE_HELP =
   "Block Poster cannot capture Chrome settings or Chrome Web Store pages. Open a regular website and reopen the extension.";
 
+// Handle toolbar clicks ourselves. Chrome's built-in side-panel action can open
+// the UI without granting activeTab, while chrome.action.onClicked does grant it.
+chrome.sidePanel
+  .setPanelBehavior({ openPanelOnActionClick: false })
+  .catch(() => undefined);
+
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
   chrome.contextMenus.create({
     id: "block-poster-pick",
     title: "Create a Block Poster",
     contexts: ["page", "image", "link", "selection"],
   });
+});
+
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.windowId == null) return;
+  // Call open() directly inside the click handler so Chrome preserves the
+  // user gesture and grants temporary access to the active tab.
+  chrome.sidePanel.open({ windowId: tab.windowId }).catch(() => undefined);
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
