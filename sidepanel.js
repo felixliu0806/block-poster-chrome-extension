@@ -237,13 +237,6 @@ function readFile(file) {
   });
 }
 
-function escapePdfString(value) {
-  return value
-    .replace(/\\/g, "\\\\")
-    .replace(/\(/g, "\\(")
-    .replace(/\)/g, "\\)");
-}
-
 function buildPdf({ pages, widthPt, heightPt }) {
   const objects = [];
   const addObject = (body) => {
@@ -264,16 +257,13 @@ function buildPdf({ pages, widthPt, heightPt }) {
       `${widthPt.toFixed(2)} 0 0 ${heightPt.toFixed(2)} 0 0 cm`,
       `/Im${imageId} Do`,
       "Q",
-      "BT /F1 8 Tf 18 14 Td 0.45 g",
-      `(${escapePdfString(page.label)}) Tj`,
-      "ET",
     ].join("\n");
     const contentId = addObject(
       `<< /Length ${content.length} >>\nstream\n${content}\nendstream`,
     );
     pageIds.push(
       addObject(
-        `<< /Type /Page /Parent ${pageTreeId} 0 R /MediaBox [0 0 ${widthPt.toFixed(2)} ${heightPt.toFixed(2)}] /Resources << /XObject << /Im${imageId} ${imageId} 0 R >> /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents ${contentId} 0 R >>`,
+        `<< /Type /Page /Parent ${pageTreeId} 0 R /MediaBox [0 0 ${widthPt.toFixed(2)} ${heightPt.toFixed(2)}] /Resources << /XObject << /Im${imageId} ${imageId} 0 R >> >> /Contents ${contentId} 0 R >>`,
       ),
     );
   }
@@ -373,16 +363,17 @@ async function renderPosterPdf(source, addWatermark) {
           context.lineTo(x, y + mark);
           context.stroke();
         }
-      }
 
-      const label = `Block Poster - row ${row + 1}/${layout.pagesHigh}, column ${col + 1}/${layout.pagesWide}`;
-      context.fillStyle = "#52525b";
-      context.font = "12px Helvetica, Arial, sans-serif";
-      context.fillText(
-        label,
-        marginPxX,
-        pagePxHeight - Math.max(10, marginPxY / 2),
-      );
+        const labelPrefix = addWatermark ? "Block Poster - " : "";
+        const label = `${labelPrefix}row ${row + 1}/${layout.pagesHigh}, column ${col + 1}/${layout.pagesWide}`;
+        context.fillStyle = "#52525b";
+        context.font = "12px Helvetica, Arial, sans-serif";
+        context.fillText(
+          label,
+          marginPxX,
+          pagePxHeight - Math.max(10, marginPxY / 2),
+        );
+      }
       if (addWatermark) {
         context.save();
         context.translate(pagePxWidth / 2, pagePxHeight / 2);
@@ -397,7 +388,6 @@ async function renderPosterPdf(source, addWatermark) {
         dataUrl: canvas.toDataURL("image/jpeg", 0.9),
         width: canvas.width,
         height: canvas.height,
-        label,
       });
     }
   }
