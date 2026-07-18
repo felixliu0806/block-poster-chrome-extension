@@ -391,7 +391,7 @@ async function renderPosterPdf(source, addWatermark) {
 
         const label = `row ${row + 1}/${layout.pagesHigh}, column ${col + 1}/${layout.pagesWide}`;
         context.fillStyle = "#52525b";
-        context.font = "12px Helvetica, Arial, sans-serif";
+        context.font = "10px Helvetica, Arial, sans-serif";
         context.fillText(
           label,
           marginPxX,
@@ -401,8 +401,8 @@ async function renderPosterPdf(source, addWatermark) {
       if (addWatermark) {
         context.save();
         const watermark = "Block Poster Pro";
-        const watermarkFontSize = 9;
-        const watermarkPadding = 4;
+        const watermarkFontSize = 12;
+        const watermarkPadding = 5;
         const watermarkX =
           pagePxWidth - Math.max(9, Math.round(marginPxX / 2));
         const watermarkY =
@@ -417,7 +417,7 @@ async function renderPosterPdf(source, addWatermark) {
           watermarkWidth + watermarkPadding * 2,
           watermarkFontSize + watermarkPadding,
         );
-        context.fillStyle = "rgba(82,82,91,.72)";
+        context.fillStyle = "rgba(63,63,70,.82)";
         context.fillText(watermark, watermarkX, watermarkY);
         context.restore();
       }
