@@ -7,13 +7,14 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "block-poster-pick",
     title: "Create a Block Poster",
-    contexts: ["page", "image"],
+    contexts: ["page", "image", "link", "selection"],
   });
 });
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  if (!tab?.id || !tab.windowId) return;
+  if (tab?.id == null || tab.windowId == null) return;
   const action = {
+    id: crypto.randomUUID(),
     tabId: tab.id,
     kind: info.mediaType === "image" && info.srcUrl ? "image" : "page",
     srcUrl: info.srcUrl || null,
@@ -26,6 +27,12 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     enabled: true,
   });
   await chrome.sidePanel.open({ tabId: tab.id });
+  await chrome.runtime
+    .sendMessage({
+      type: "CONTEXT_ACTION_AVAILABLE",
+      actionId: action.id,
+    })
+    .catch(() => undefined);
 });
 
 async function getActiveTab() {

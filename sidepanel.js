@@ -21,6 +21,7 @@ const state = {
   scanImages: [],
   scanSelected: new Set(),
   toastTimer: null,
+  initialized: false,
 };
 
 const elements = Object.fromEntries(
@@ -823,6 +824,9 @@ chrome.runtime.onMessage.addListener((message) => {
         }
       });
   }
+  if (message?.type === "CONTEXT_ACTION_AVAILABLE" && message.actionId) {
+    if (state.initialized) handlePendingContextAction(message.actionId);
+  }
 });
 
 elements.pickImageButton.addEventListener("click", () =>
@@ -907,10 +911,11 @@ document.addEventListener("click", (event) => {
 });
 elements.scanButton.addEventListener("click", scanPage);
 
-async function handlePendingContextAction() {
+async function handlePendingContextAction(expectedActionId) {
   const { pendingContextAction } =
     await chrome.storage.session.get("pendingContextAction");
   if (!pendingContextAction) return;
+  if (expectedActionId && pendingContextAction.id !== expectedActionId) return;
   await chrome.storage.session.remove("pendingContextAction");
   if (Date.now() - pendingContextAction.createdAt > 30_000) return;
 
@@ -945,5 +950,6 @@ async function handlePendingContextAction() {
     }
   }
   updateLayoutSummary();
+  state.initialized = true;
   await handlePendingContextAction();
 })();
