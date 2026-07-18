@@ -67,6 +67,8 @@ PDFs.
 - `storage`: Remember the connected Block Poster account token. No poster
   history is stored.
 - `contextMenus`: Offer a shortcut for opening Block Poster from the page.
+  Right-clicking an image imports that image; right-clicking the page starts a
+  page scan for eligible paid accounts.
 - Required host access to `blockposter.pro`: Connect an existing account and
   check paid export entitlements.
 - Optional host access: Download only the image origins selected by a paid user

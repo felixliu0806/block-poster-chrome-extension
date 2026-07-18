@@ -47,6 +47,12 @@ capture region.
 Paid members also get a page scanner that presents eligible images in the side
 panel, filters icons and duplicates, and allows a bounded batch to be exported.
 
+The page context menu provides a permission-friendly shortcut. Right-clicking
+an image opens the side panel and imports that rendered image. Right-clicking
+the page background opens the side panel and starts the paid page scan. Both
+actions use Chrome's temporary `activeTab` grant for the page where the menu was
+invoked.
+
 ## Integration boundaries
 
 - Manifest V3 Chrome extension.
@@ -77,6 +83,8 @@ The folder is directly loadable as an unpacked Manifest V3 extension; there is
 no extension build step.
 
 - The toolbar action opens the side panel.
+- The page context menu imports a right-clicked image or starts a whole-page
+  scan without requiring permanent access to every website.
 - Single-image picking uses a temporary page highlighter and captures the
   visible rendered image without requesting permanent access to every site.
 - Region capture, upload, and clipboard paste are implemented.

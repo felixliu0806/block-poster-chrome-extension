@@ -211,7 +211,11 @@ async function cropCapture(dataUrl, capture) {
 
 async function handlePageCapture(message) {
   try {
-    const screenshot = await sendMessage({ type: "CAPTURE_VISIBLE_TAB" });
+    if (message.error) throw new Error(message.error);
+    const screenshot = await sendMessage({
+      type: "CAPTURE_VISIBLE_TAB",
+      tabId: message.tabId,
+    });
     await cropCapture(screenshot, message);
     showToast(
       message.type === "PAGE_IMAGE_PICKED"
@@ -900,6 +904,30 @@ document.addEventListener("click", (event) => {
 });
 elements.scanButton.addEventListener("click", scanPage);
 
+async function handlePendingContextAction() {
+  const { pendingContextAction } =
+    await chrome.storage.session.get("pendingContextAction");
+  if (!pendingContextAction) return;
+  await chrome.storage.session.remove("pendingContextAction");
+  if (Date.now() - pendingContextAction.createdAt > 30_000) return;
+
+  if (pendingContextAction.kind === "image") {
+    try {
+      const capture = await sendMessage({
+        type: "CAPTURE_CONTEXT_IMAGE",
+        tabId: pendingContextAction.tabId,
+        srcUrl: pendingContextAction.srcUrl,
+      });
+      await handlePageCapture(capture);
+    } catch (error) {
+      showToast(error.message || "Unable to add this image.", true);
+    }
+    return;
+  }
+
+  await scanPage();
+}
+
 (async function initialize() {
   const { extensionAuthToken } =
     await chrome.storage.local.get("extensionAuthToken");
@@ -914,4 +942,5 @@ elements.scanButton.addEventListener("click", scanPage);
     }
   }
   updateLayoutSummary();
+  await handlePendingContextAction();
 })();

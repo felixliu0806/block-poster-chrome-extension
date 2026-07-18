@@ -4,19 +4,26 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
   chrome.contextMenus.create({
     id: "block-poster-pick",
-    title: "Create a Block Poster from this page",
+    title: "Create a Block Poster",
     contexts: ["page", "image"],
   });
 });
 
-chrome.contextMenus.onClicked.addListener(async (_info, tab) => {
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (!tab?.id || !tab.windowId) return;
+  const action = {
+    tabId: tab.id,
+    kind: info.mediaType === "image" && info.srcUrl ? "image" : "page",
+    srcUrl: info.srcUrl || null,
+    createdAt: Date.now(),
+  };
+  await chrome.storage.session.set({ pendingContextAction: action });
   await chrome.sidePanel.setOptions({
     tabId: tab.id,
     path: PANEL_PATH,
     enabled: true,
   });
-  await chrome.sidePanel.open({ windowId: tab.windowId });
+  await chrome.sidePanel.open({ tabId: tab.id });
 });
 
 async function getActiveTab() {
@@ -41,6 +48,16 @@ async function sendToActiveTab(type) {
   return chrome.tabs.sendMessage(tab.id, { type });
 }
 
+async function sendToTab(tabId, type, payload = {}) {
+  const tab = await getActiveTab();
+  if (tab.id !== tabId) {
+    throw new Error("Return to the page where you opened Block Poster.");
+  }
+  await ensureCaptureScript(tabId);
+  const result = await chrome.tabs.sendMessage(tabId, { type, ...payload });
+  return { ...result, tabId };
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message?.type) return false;
 
@@ -52,8 +69,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return sendToActiveTab("START_REGION_CAPTURE");
       case "SCAN_PAGE_IMAGES":
         return sendToActiveTab("SCAN_PAGE_IMAGES");
+      case "CAPTURE_CONTEXT_IMAGE":
+        if (!Number.isInteger(message.tabId) || !message.srcUrl) {
+          throw new Error("The selected page image is no longer available.");
+        }
+        return sendToTab(message.tabId, "CAPTURE_CONTEXT_IMAGE", {
+          srcUrl: message.srcUrl,
+        });
       case "CAPTURE_VISIBLE_TAB": {
         const tab = await getActiveTab();
+        if (message.tabId && tab.id !== message.tabId) {
+          throw new Error("Return to the page where you selected the image.");
+        }
         return chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
       }
       case "OPEN_TAB": {

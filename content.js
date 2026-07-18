@@ -188,6 +188,40 @@
     return { started: true };
   }
 
+  function captureContextImage(srcUrl) {
+    const image = [...document.images].find(
+      (candidate) =>
+        candidate.currentSrc === srcUrl || candidate.src === srcUrl,
+    );
+    if (!image) {
+      throw new Error("The selected image is no longer visible on this page.");
+    }
+    const rect = image.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) {
+      throw new Error("The selected image is not currently visible.");
+    }
+    return {
+      type: "PAGE_IMAGE_PICKED",
+      sourceUrl: image.currentSrc || image.src,
+      name: image.alt || "web-image",
+      naturalWidth: image.naturalWidth,
+      naturalHeight: image.naturalHeight,
+      rect: {
+        left: Math.max(0, rect.left),
+        top: Math.max(0, rect.top),
+        width: Math.min(
+          window.innerWidth - Math.max(0, rect.left),
+          rect.width,
+        ),
+        height: Math.min(
+          window.innerHeight - Math.max(0, rect.top),
+          rect.height,
+        ),
+      },
+      ...pageMetrics(),
+    };
+  }
+
   function scanPageImages() {
     const seen = new Set();
     const images = [];
@@ -243,5 +277,14 @@
       sendResponse(startRegionCapture());
     else if (message?.type === "SCAN_PAGE_IMAGES")
       sendResponse(scanPageImages());
+    else if (message?.type === "CAPTURE_CONTEXT_IMAGE") {
+      try {
+        sendResponse(captureContextImage(message.srcUrl));
+      } catch (error) {
+        sendResponse({
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+    }
   });
 })();
