@@ -138,11 +138,30 @@ function getLayout(source = state.source) {
 function updateLayoutSummary() {
   const layout = getLayout();
   elements.pagesWideValue.textContent = String(layout.pagesWide);
+  if (!state.source && state.scanSelected.size > 0) {
+    const count = state.scanSelected.size;
+    elements.layoutSummary.textContent =
+      `${count} poster${count === 1 ? "" : "s"} · height varies by image`;
+    return;
+  }
   elements.layoutSummary.textContent = `${layout.pagesWide} × ${layout.pagesHigh} · ${layout.totalPages} sheets`;
 }
 
 function revokeSource(source) {
   if (source?.objectUrl) URL.revokeObjectURL(source.objectUrl);
+}
+
+function updateEditorAvailability() {
+  const hasSingleSource = Boolean(state.source);
+  const hasBatchSelection = state.scanSelected.size > 0;
+  elements.settingsSection.classList.toggle(
+    "disabled-section",
+    !hasSingleSource && !hasBatchSelection,
+  );
+  elements.exportSection.classList.toggle(
+    "disabled-section",
+    !hasSingleSource,
+  );
 }
 
 async function imageDimensions(src) {
@@ -166,8 +185,7 @@ async function setSource(src, name, objectUrl = false) {
   elements.sourceSize.textContent = `${dimensions.width} × ${dimensions.height}px`;
   elements.emptyState.classList.add("hidden");
   elements.previewCard.classList.remove("hidden");
-  elements.settingsSection.classList.remove("disabled-section");
-  elements.exportSection.classList.remove("disabled-section");
+  updateEditorAvailability();
   updateLayoutSummary();
 }
 
@@ -177,8 +195,8 @@ function clearSource() {
   elements.sourcePreview.removeAttribute("src");
   elements.previewCard.classList.add("hidden");
   elements.emptyState.classList.remove("hidden");
-  elements.settingsSection.classList.add("disabled-section");
-  elements.exportSection.classList.add("disabled-section");
+  updateEditorAvailability();
+  updateLayoutSummary();
 }
 
 async function cropCapture(dataUrl, capture) {
@@ -726,6 +744,7 @@ function renderScanResults() {
     message.className = "section-copy";
     message.textContent = "No large images were found on this page.";
     elements.scanResults.append(message);
+    updateEditorAvailability();
     return;
   }
   state.scanImages.forEach((image, index) => {
@@ -741,6 +760,8 @@ function renderScanResults() {
       if (checkbox.checked) state.scanSelected.add(index);
       else state.scanSelected.delete(index);
       label.classList.toggle("selected", checkbox.checked);
+      updateEditorAvailability();
+      updateLayoutSummary();
     });
     label.append(preview, checkbox);
     elements.scanResults.append(label);
@@ -761,6 +782,8 @@ function renderScanResults() {
   actions.append(all, create);
   elements.scanResults.append(actions);
   elements.scanResults.classList.remove("hidden");
+  updateEditorAvailability();
+  updateLayoutSummary();
 }
 
 async function scanPage() {
