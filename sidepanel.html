@@ -11,7 +11,6 @@
       <section id="sourceSection" class="section">
         <div class="section-heading">
           <div class="section-title">
-            <span class="step">1</span>
             <h1>Choose an image</h1>
           </div>
           <div class="account-area">
@@ -50,9 +49,7 @@
             class="source-button scan-source-button"
             type="button"
           >
-            <span>▦</span>Scan current page<span class="pro-badge"
-              >5 Free · 20 Pro</span
-            >
+            <span>▦</span>Scan current page
           </button>
         </div>
         <input
@@ -84,7 +81,6 @@
       <section id="settingsSection" class="section disabled-section">
         <div class="section-heading">
           <div class="section-title">
-            <span class="step">2</span>
             <h2>Print setup</h2>
           </div>
         </div>
@@ -106,10 +102,15 @@
             </select></label
           >
         </div>
-        <label class="range-label"
-          ><span>Pages wide <strong id="pagesWideValue">3</strong></span
-          ><input id="pagesWideInput" type="range" min="1" max="8" value="3"
-        /></label>
+        <label class="range-label">
+          <span>Pages across <strong id="pagesWideValue">3</strong></span>
+          <small>Page height is calculated automatically from the image.</small>
+          <input id="pagesWideInput" type="range" min="1" max="8" value="3" />
+        </label>
+        <div class="summary">
+          <span>Poster layout</span
+          ><strong id="layoutSummary">3 × 3 · 9 sheets</strong>
+        </div>
         <div class="field-row compact">
           <label
             >Margin (mm)<input
@@ -128,36 +129,55 @@
               value="8"
           /></label>
         </div>
-        <div class="summary">
-          <span>Poster layout</span
-          ><strong id="layoutSummary">3 × 3 · 9 sheets</strong>
-        </div>
-        <label class="check-row"
-          ><input id="cutMarksInput" type="checkbox" checked /><span
-            >Include cut marks and page labels</span
-          ></label
-        >
-      </section>
-
-      <section id="exportSection" class="section disabled-section">
-        <div class="section-heading">
-          <div class="section-title">
-            <span class="step">3</span>
-            <h2>Export PDF</h2>
-          </div>
-        </div>
-        <div class="export-actions">
-          <button id="freeExportButton" class="export-button" type="button">
-            Download free PDF
-          </button>
-          <button id="cleanExportButton" class="clean-button" type="button">
-            Download without watermark <span>✦</span>
-          </button>
-        </div>
-        <p class="export-note">Free PDFs include a Block Poster watermark.</p>
+        <label class="check-row">
+          <input id="cutMarksInput" type="checkbox" checked />
+          <span>
+            <strong>Cut marks &amp; page labels</strong>
+            <small>Add trim guides and row/column labels to every sheet.</small>
+          </span>
+        </label>
       </section>
 
     </main>
+
+    <footer id="actionBar" class="action-bar disabled-action-bar">
+      <div class="action-bar-copy">
+        <strong id="actionBarTitle">Nothing selected</strong>
+        <span id="actionBarNote">Choose one or more images to export.</span>
+      </div>
+      <div class="action-bar-buttons">
+        <button id="freeExportButton" class="free-action" type="button">
+          Free PDF
+        </button>
+        <button id="cleanExportButton" class="clean-action" type="button">
+          Watermark-free PDF <span>✦</span>
+        </button>
+      </div>
+    </footer>
+
+    <div id="paywallDialog" class="paywall-backdrop hidden">
+      <section class="paywall-card" role="dialog" aria-modal="true">
+        <button
+          id="paywallCloseButton"
+          class="paywall-close"
+          type="button"
+          aria-label="Close"
+        >
+          ×
+        </button>
+        <span class="paywall-kicker">Block Poster Pro</span>
+        <h2 id="paywallTitle">Remove watermarks</h2>
+        <p id="paywallCopy"></p>
+        <div class="paywall-actions">
+          <button id="paywallSecondaryButton" type="button">
+            View pricing
+          </button>
+          <button id="paywallPrimaryButton" type="button">
+            Connect account
+          </button>
+        </div>
+      </section>
+    </div>
 
     <div id="toast" class="toast hidden" role="status"></div>
     <script src="sidepanel.js"></script>

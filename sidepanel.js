@@ -1,7 +1,7 @@
 const APP_ORIGIN = "https://blockposter.pro";
 const MM_TO_PT = 72 / 25.4;
 const FREE_BATCH_LIMIT = 5;
-const MEMBER_BATCH_LIMIT = 20;
+const MEMBER_BATCH_LIMIT = 30;
 const PAPERS = {
   a4: { label: "A4", widthMm: 210, heightMm: 297 },
   letter: { label: "US Letter", widthMm: 215.9, heightMm: 279.4 },
@@ -44,7 +44,6 @@ const elements = Object.fromEntries(
     "sourceSize",
     "clearButton",
     "settingsSection",
-    "exportSection",
     "paperSelect",
     "orientationSelect",
     "pagesWideInput",
@@ -55,6 +54,15 @@ const elements = Object.fromEntries(
     "cutMarksInput",
     "freeExportButton",
     "cleanExportButton",
+    "actionBar",
+    "actionBarTitle",
+    "actionBarNote",
+    "paywallDialog",
+    "paywallTitle",
+    "paywallCopy",
+    "paywallCloseButton",
+    "paywallPrimaryButton",
+    "paywallSecondaryButton",
     "scanButton",
     "scanResults",
     "toast",
@@ -138,9 +146,14 @@ function getLayout(source = state.source) {
 }
 
 function updateLayoutSummary() {
-  const layout = getLayout();
+  const selectedSources = [...state.scanSelected]
+    .map((index) => state.scanImages[index])
+    .filter(Boolean);
+  const summarySource =
+    state.source || (selectedSources.length === 1 ? selectedSources[0] : null);
+  const layout = getLayout(summarySource);
   elements.pagesWideValue.textContent = String(layout.pagesWide);
-  if (!state.source && state.scanSelected.size > 0) {
+  if (!state.source && selectedSources.length > 1) {
     const count = state.scanSelected.size;
     elements.layoutSummary.textContent =
       `${count} poster${count === 1 ? "" : "s"} · height varies by image`;
@@ -154,20 +167,12 @@ function revokeSource(source) {
 }
 
 function updateEditorAvailability() {
-  const hasSingleSource = Boolean(state.source);
-  const hasBatchSelection = state.scanSelected.size > 0;
+  const hasSelection = getSelectedCount() > 0;
   elements.settingsSection.classList.toggle(
     "disabled-section",
-    !hasSingleSource && !hasBatchSelection,
+    !hasSelection,
   );
-  elements.exportSection.classList.toggle(
-    "disabled-section",
-    !hasSingleSource,
-  );
-  elements.exportSection.classList.toggle(
-    "hidden",
-    !hasSingleSource && hasBatchSelection,
-  );
+  updateActionBar();
 }
 
 async function imageDimensions(src) {
@@ -180,6 +185,10 @@ async function imageDimensions(src) {
 async function setSource(src, name, objectUrl = false) {
   const dimensions = await imageDimensions(src);
   revokeSource(state.source);
+  state.scanImages = [];
+  state.scanSelected = new Set();
+  elements.scanResults.replaceChildren();
+  elements.scanResults.classList.add("hidden");
   state.source = {
     src,
     objectUrl: objectUrl ? src : null,
@@ -401,23 +410,23 @@ async function renderPosterPdf(source, addWatermark) {
       if (addWatermark) {
         context.save();
         const watermark = "Block Poster Pro";
-        const watermarkFontSize = 12;
-        const watermarkPadding = 5;
+        const watermarkFontSize = 30;
+        const watermarkPadding = 10;
         const watermarkX =
           pagePxWidth - Math.max(9, Math.round(marginPxX / 2));
         const watermarkY =
           pagePxHeight - Math.max(9, Math.round(marginPxY / 2));
-        context.font = `500 ${watermarkFontSize}px Helvetica, Arial, sans-serif`;
+        context.font = `600 ${watermarkFontSize}px Helvetica, Arial, sans-serif`;
         context.textAlign = "right";
         const watermarkWidth = context.measureText(watermark).width;
-        context.fillStyle = "rgba(255,255,255,.92)";
+        context.fillStyle = "rgba(255,255,255,.78)";
         context.fillRect(
           watermarkX - watermarkWidth - watermarkPadding,
           watermarkY - watermarkFontSize - watermarkPadding / 2,
           watermarkWidth + watermarkPadding * 2,
           watermarkFontSize + watermarkPadding,
         );
-        context.fillStyle = "rgba(63,63,70,.82)";
+        context.fillStyle = "rgba(39,39,42,.58)";
         context.fillText(watermark, watermarkX, watermarkY);
         context.restore();
       }
@@ -593,66 +602,11 @@ async function fetchBatchSource(image, index) {
   };
 }
 
-async function downloadBatchZip(button) {
-  if (!state.scanSelected.size) {
-    showToast("Select at least one image first.", true);
-    return;
-  }
-  const original = button.textContent;
-  button.disabled = true;
-  let selectionWasCapped = false;
-  try {
-    if (state.authToken) {
-      button.textContent = "Checking membership…";
-      await refreshEntitlement();
-    }
-    const memberBatch = hasBatchAccess();
-    const limit = getBatchLimit();
-    const selectedIndexes = [...state.scanSelected];
-    if (selectedIndexes.length > limit) {
-      state.scanSelected = new Set(selectedIndexes.slice(0, limit));
-      selectionWasCapped = true;
-    }
-    const selected = [...state.scanSelected]
-      .map((index) => state.scanImages[index])
-      .filter(Boolean);
-    button.textContent = "Requesting access…";
-    const granted = await requestImageOrigins(selected);
-    if (!granted)
-      throw new Error("Image access is required to create this batch.");
-    const files = [];
-    for (let index = 0; index < selected.length; index += 1) {
-      button.textContent = `Building ${index + 1}/${selected.length}…`;
-      const source = await fetchBatchSource(selected[index], index);
-      try {
-        const output = await renderPosterPdf(source, !memberBatch);
-        files.push({ blob: output.blob, name: output.filename });
-      } finally {
-        revokeSource(source);
-      }
-    }
-    button.textContent = "Packing ZIP…";
-    const zip = await buildZip(files);
-    await downloadBlob(
-      zip,
-      `block-poster-batch-${new Date().toISOString().slice(0, 10)}.zip`,
-    );
-    showToast(
-      memberBatch
-        ? `${files.length} watermark-free posters downloaded as a ZIP.`
-        : `${files.length} free posters downloaded with watermarks.`,
-    );
-  } catch (error) {
-    showToast(error.message || "Batch export failed.", true);
-  } finally {
-    button.disabled = false;
-    button.textContent = original;
-    if (selectionWasCapped) renderScanResults();
-  }
-}
+async function exportSelection(clean, button) {
+  let scanned = getSelectedScanImages();
+  let count = scanned.length || (state.source ? 1 : 0);
+  if (!count) return;
 
-async function exportCurrent(clean) {
-  if (!state.source) return;
   if (clean && state.authToken) {
     try {
       await refreshEntitlement();
@@ -661,44 +615,107 @@ async function exportCurrent(clean) {
       return;
     }
   }
-  if (clean && !state.entitlement.removeWatermark) {
-    if (!state.authToken) {
-      await connectAccount();
-      showToast(
-        "Connect your Block Poster account, then try the clean export again.",
-      );
-    } else {
-      await sendMessage({
-        type: "OPEN_TAB",
-        url: `${APP_ORIGIN}/pricing?utm_source=chrome_extension`,
-      });
-      showToast("A paid export or Pro plan removes the watermark.");
-    }
+
+  const selectionLimit = getBatchLimit();
+  if (scanned.length > selectionLimit) {
+    state.scanSelected = new Set(
+      [...state.scanSelected].slice(0, selectionLimit),
+    );
+    scanned = getSelectedScanImages();
+    count = scanned.length;
+    renderScanResults();
+    showToast(
+      `Your current plan includes up to ${selectionLimit} images per export.`,
+      true,
+    );
+  }
+
+  if (
+    clean &&
+    ((count === 1 && !state.entitlement.removeWatermark) ||
+      (count > 1 && !hasBatchAccess()))
+  ) {
+    showPaywall();
     return;
   }
 
-  const button = clean ? elements.cleanExportButton : elements.freeExportButton;
   const original = button.innerHTML;
   button.disabled = true;
-  button.textContent = "Building PDF…";
+  const temporarySources = [];
+  const skippedImages = [];
   try {
-    const output = await renderPosterPdf(state.source, !clean);
+    let sources;
+    if (scanned.length) {
+      button.textContent = "Requesting access…";
+      const granted = await requestImageOrigins(scanned);
+      if (!granted)
+        throw new Error("Image access is required to export this selection.");
+      sources = [];
+      for (let index = 0; index < scanned.length; index += 1) {
+        button.textContent = `Loading ${index + 1}/${scanned.length}…`;
+        try {
+          const source = await fetchBatchSource(scanned[index], index);
+          temporarySources.push(source);
+          sources.push(source);
+        } catch {
+          skippedImages.push(index + 1);
+        }
+      }
+      if (!sources.length)
+        throw new Error(
+          "None of the selected images could be downloaded. Try choosing images from another page.",
+        );
+    } else sources = [state.source];
+
+    const outputs = [];
+    for (let index = 0; index < sources.length; index += 1) {
+      button.textContent = `Building ${index + 1}/${sources.length}…`;
+      outputs.push(await renderPosterPdf(sources[index], !clean));
+    }
+
     if (clean && state.entitlement.plan === "single") {
       await apiFetch("/api/poster/extension-consume-export", {
         method: "POST",
       });
       await refreshEntitlement();
     }
-    await downloadBlob(output.blob, output.filename);
-    showToast(
-      clean ? "Watermark-free PDF downloaded." : "Free PDF downloaded.",
-    );
+
+    if (outputs.length === 1) {
+      await downloadBlob(outputs[0].blob, outputs[0].filename);
+      const successMessage = clean
+        ? "Watermark-free PDF downloaded."
+        : "Free PDF downloaded.";
+      showToast(`${successMessage}${formatSkippedImages(skippedImages)}`);
+    } else {
+      button.textContent = "Packing ZIP…";
+      const zip = await buildZip(
+        outputs.map((output) => ({
+          blob: output.blob,
+          name: output.filename,
+        })),
+      );
+      await downloadBlob(
+        zip,
+        `block-poster-batch-${new Date().toISOString().slice(0, 10)}.zip`,
+      );
+      const successMessage = clean
+        ? `${outputs.length} watermark-free posters downloaded as a ZIP.`
+        : `${outputs.length} free posters downloaded with watermarks.`;
+      showToast(`${successMessage}${formatSkippedImages(skippedImages)}`);
+    }
   } catch (error) {
-    showToast(error.message || "PDF export failed.", true);
+    showToast(error.message || "Export failed.", true);
   } finally {
+    temporarySources.forEach(revokeSource);
     button.disabled = false;
     button.innerHTML = original;
+    updateActionBar();
   }
+}
+
+function formatSkippedImages(indices) {
+  if (!indices.length) return "";
+  return ` Skipped selected image${indices.length === 1 ? "" : "s"} ${indices.join(", ")}.`;
 }
 
 async function apiFetch(path, init = {}) {
@@ -728,11 +745,90 @@ function getBatchLimit() {
   return hasBatchAccess() ? MEMBER_BATCH_LIMIT : FREE_BATCH_LIMIT;
 }
 
+function getSelectedScanImages() {
+  return [...state.scanSelected]
+    .map((index) => state.scanImages[index])
+    .filter(Boolean);
+}
+
+function getSelectedCount() {
+  const scanned = getSelectedScanImages().length;
+  return scanned || (state.source ? 1 : 0);
+}
+
+function updateActionBar() {
+  const count = getSelectedCount();
+  const zip = count > 1;
+  const cleanAvailable = zip
+    ? hasBatchAccess()
+    : Boolean(state.entitlement.removeWatermark);
+
+  elements.actionBar.classList.toggle("disabled-action-bar", count === 0);
+  elements.freeExportButton.disabled = count === 0;
+  elements.cleanExportButton.disabled = count === 0;
+  elements.actionBarTitle.textContent =
+    count === 0
+      ? "Nothing selected"
+      : `${count} poster${count === 1 ? "" : "s"} · ${zip ? "ZIP" : "PDF"}`;
+  elements.actionBarNote.textContent =
+    count === 0
+      ? "Choose one or more images to export."
+      : cleanAvailable
+        ? "Free adds watermarks · Clean export is included."
+        : zip
+          ? `Free ZIP includes watermarks · Pro unlocks ${MEMBER_BATCH_LIMIT} clean posters.`
+          : "Free PDF includes a watermark.";
+  elements.freeExportButton.textContent = zip ? "Free ZIP" : "Free PDF";
+  elements.cleanExportButton.innerHTML = zip
+    ? cleanAvailable
+      ? "Watermark-free ZIP <span>✓</span>"
+      : "Unlock clean ZIP <span>✦</span>"
+    : cleanAvailable
+      ? "Watermark-free PDF <span>✓</span>"
+      : "Watermark-free PDF <span>✦</span>";
+}
+
+async function openPricing(source = "clean_export") {
+  await sendMessage({
+    type: "OPEN_TAB",
+    url: `${APP_ORIGIN}/pricing?utm_source=chrome_extension&utm_content=${encodeURIComponent(source)}`,
+  });
+}
+
+function closePaywall() {
+  elements.paywallDialog.classList.add("hidden");
+}
+
+function showPaywall() {
+  const count = getSelectedCount();
+  const zip = count > 1;
+  elements.paywallTitle.textContent = zip
+    ? "Unlock watermark-free batches"
+    : "Remove the watermark";
+  elements.paywallCopy.textContent = !state.authToken
+    ? "Connect your Block Poster account to use an existing purchase, or view the available plans."
+    : zip
+      ? `Watermark-free ZIP exports with up to ${MEMBER_BATCH_LIMIT} posters are included with Pro and Lifetime.`
+      : "Use a Single Export credit, Pro, or Lifetime to download this PDF without a watermark.";
+  elements.paywallPrimaryButton.textContent = state.authToken
+    ? "View plans"
+    : "Connect account";
+  elements.paywallPrimaryButton.dataset.action = state.authToken
+    ? "pricing"
+    : "connect";
+  elements.paywallSecondaryButton.textContent = state.authToken
+    ? "Not now"
+    : "View pricing";
+  elements.paywallSecondaryButton.dataset.action = state.authToken
+    ? "close"
+    : "pricing";
+  elements.paywallDialog.classList.remove("hidden");
+}
+
 function updateAccountUi() {
   if (!state.authToken) {
     elements.accountButton.textContent = "Connect";
-    elements.cleanExportButton.innerHTML =
-      "Download without watermark <span>✦</span>";
+    updateActionBar();
     return;
   }
   const plan = state.entitlement.plan;
@@ -744,9 +840,7 @@ function updateAccountUi() {
         : plan === "pro"
           ? "Pro"
           : `${state.entitlement.singleExportCredits} export`;
-  elements.cleanExportButton.innerHTML = state.entitlement.removeWatermark
-    ? "Download without watermark <span>✓</span>"
-    : "Unlock watermark-free export <span>✦</span>";
+  updateActionBar();
 }
 
 async function refreshEntitlement() {
@@ -801,36 +895,52 @@ function renderScanResults() {
       label.classList.toggle("selected", checkbox.checked);
       updateEditorAvailability();
       updateLayoutSummary();
-      download.disabled = state.scanSelected.size === 0;
     });
     label.append(preview, checkbox);
     elements.scanResults.append(label);
   });
   const actions = document.createElement("div");
   actions.className = "scan-actions";
-  const all = document.createElement("button");
-  all.type = "button";
-  all.textContent = `Select all (max ${getBatchLimit()})`;
-  all.addEventListener("click", () => {
+  const limit = getBatchLimit();
+  const selectedIndices = [...state.scanSelected].sort((a, b) => a - b);
+  const nextStart = selectedIndices.length
+    ? selectedIndices[selectedIndices.length - 1] + 1
+    : 0;
+  const selectBatch = (start) => {
     state.scanSelected = new Set(
       state.scanImages
-        .slice(0, getBatchLimit())
-        .map((_, index) => index),
+        .slice(start, start + limit)
+        .map((_, index) => start + index),
     );
     renderScanResults();
+  };
+
+  const first = document.createElement("button");
+  first.type = "button";
+  first.textContent = `Select first ${limit}`;
+  first.addEventListener("click", () => selectBatch(0));
+
+  const next = document.createElement("button");
+  next.type = "button";
+  next.textContent = `Next ${limit}`;
+  next.disabled =
+    selectedIndices.length === 0 || nextStart >= state.scanImages.length;
+  next.addEventListener("click", () => selectBatch(nextStart));
+
+  const clear = document.createElement("button");
+  clear.type = "button";
+  clear.textContent = "Clear selection";
+  clear.disabled = state.scanSelected.size === 0;
+  clear.addEventListener("click", () => {
+    state.scanSelected = new Set();
+    renderScanResults();
   });
+
   const help = document.createElement("p");
   help.className = "scan-batch-help";
-  help.textContent = hasBatchAccess()
-    ? `Member batch: up to ${MEMBER_BATCH_LIMIT} watermark-free posters.`
-    : `Free batch: up to ${FREE_BATCH_LIMIT} posters with watermarks. Pro & Lifetime: ${MEMBER_BATCH_LIMIT} without watermarks.`;
-  const download = document.createElement("button");
-  download.type = "button";
-  download.textContent = "Download batch ZIP";
-  download.disabled = state.scanSelected.size === 0;
-  download.addEventListener("click", () => downloadBatchZip(download));
+  help.textContent = `${state.scanSelected.size} of ${state.scanImages.length} selected. One image exports as PDF; multiple images export as ZIP.`;
   elements.scanResults.append(help);
-  actions.append(all, download);
+  actions.append(first, next, clear);
   elements.scanResults.append(actions);
   elements.scanResults.classList.remove("hidden");
   updateEditorAvailability();
@@ -843,6 +953,11 @@ async function scanPage() {
     elements.scanButton.disabled = true;
     elements.scanButton.textContent = "Scanning…";
     const result = await sendMessage({ type: "SCAN_PAGE_IMAGES" });
+    revokeSource(state.source);
+    state.source = null;
+    elements.sourcePreview.removeAttribute("src");
+    elements.previewCard.classList.add("hidden");
+    elements.emptyState.classList.add("hidden");
     state.scanImages = result?.images || [];
     state.scanSelected = new Set();
     renderScanResults();
@@ -931,8 +1046,42 @@ elements.paperSelect.addEventListener("change", updateLayoutSummary);
 elements.orientationSelect.addEventListener("change", updateLayoutSummary);
 elements.marginInput.addEventListener("input", updateLayoutSummary);
 elements.overlapInput.addEventListener("input", updateLayoutSummary);
-elements.freeExportButton.addEventListener("click", () => exportCurrent(false));
-elements.cleanExportButton.addEventListener("click", () => exportCurrent(true));
+elements.freeExportButton.addEventListener("click", () =>
+  exportSelection(false, elements.freeExportButton),
+);
+elements.cleanExportButton.addEventListener("click", () =>
+  exportSelection(true, elements.cleanExportButton),
+);
+elements.paywallCloseButton.addEventListener("click", closePaywall);
+elements.paywallDialog.addEventListener("click", (event) => {
+  if (event.target === elements.paywallDialog) closePaywall();
+});
+elements.paywallPrimaryButton.addEventListener("click", async () => {
+  const action = elements.paywallPrimaryButton.dataset.action;
+  closePaywall();
+  try {
+    if (action === "connect") await connectAccount();
+    else
+      await openPricing(
+        getSelectedCount() > 1 ? "clean_batch" : "clean_pdf",
+      );
+  } catch (error) {
+    showToast(error.message || "Unable to continue.", true);
+  }
+});
+elements.paywallSecondaryButton.addEventListener("click", async () => {
+  const action = elements.paywallSecondaryButton.dataset.action;
+  closePaywall();
+  if (action === "pricing") {
+    try {
+      await openPricing(
+        getSelectedCount() > 1 ? "clean_batch" : "clean_pdf",
+      );
+    } catch (error) {
+      showToast(error.message || "Unable to open pricing.", true);
+    }
+  }
+});
 elements.accountButton.addEventListener("click", async () => {
   if (!state.authToken) {
     await connectAccount();
@@ -1015,6 +1164,7 @@ async function handlePendingContextAction(expectedActionId) {
     }
   }
   updateLayoutSummary();
+  updateEditorAvailability();
   state.initialized = true;
   await handlePendingContextAction();
 })();

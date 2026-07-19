@@ -21,7 +21,7 @@ Block Poster PDFs.
 ### Paid workflow
 
 - Export without the Block Poster watermark.
-- Select and process up to 20 images as one batch.
+- Select and process up to 30 images as one batch.
 - Download a watermark-free batch without creating a saved project or history.
 
 ### Explicit non-goals
@@ -46,7 +46,7 @@ capture region.
 
 The page scanner presents eligible images in the side panel and filters icons
 and duplicates. Free users can export up to 5 watermarked posters per batch;
-Pro and Lifetime members can export up to 20 without watermarks.
+Pro and Lifetime members can export up to 30 without watermarks.
 
 The page context menu provides a permission-friendly shortcut. Right-clicking
 an image opens the side panel and imports that rendered image. Right-clicking
@@ -97,7 +97,7 @@ no extension build step.
 - Existing single-export credits, Pro subscriptions, and Lifetime purchases
   control watermark-free export.
 - Free users can select up to 5 scanned images per batch with watermarks. Pro
-  and Lifetime users can select up to 20 per batch without watermarks.
+  and Lifetime users can select up to 30 per batch without watermarks.
 - No source, PDF, batch, or generation history is persisted.
 
 ## Load locally
