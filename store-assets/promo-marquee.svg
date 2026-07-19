@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560">
+  <defs>
+    <radialGradient id="blueGlow" cx="78%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#2563eb" stop-opacity=".95"/>
+      <stop offset="1" stop-color="#050505" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="poster" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#93c5fd"/>
+      <stop offset=".5" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="560" fill="#050505"/>
+  <rect width="1400" height="560" fill="url(#blueGlow)"/>
+  <g transform="translate(92 82) scale(1.75)">
+    <rect width="64" height="64" rx="12" fill="#050505" stroke="#404040"/>
+    <rect x="14" y="12" width="32" height="40" rx="3" fill="#fff"/>
+    <path d="M14 25h32M14 38h32M25 12v40M36 12v40" stroke="#050505" stroke-width="3"/>
+    <rect x="38" y="35" width="12" height="16" rx="2" fill="#60a5fa" stroke="#050505" stroke-width="2"/>
+  </g>
+  <text x="92" y="286" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="72" font-weight="700">Block Poster</text>
+  <text x="96" y="344" fill="#e4e4e7" font-family="Arial, Helvetica, sans-serif" font-size="28">Turn web images into wall-sized printable PDFs.</text>
+  <text x="96" y="404" fill="#93c5fd" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="600">Pick · Capture · Tile · Print</text>
+  <g transform="translate(955 66) rotate(5)">
+    <rect width="330" height="430" rx="20" fill="#fff" stroke="#d4d4d8" stroke-width="4"/>
+    <g transform="translate(15 15)">
+      <rect width="300" height="400" rx="10" fill="url(#poster)"/>
+      <path d="M100 0v400M200 0v400M0 133h300M0 267h300" stroke="#fff" stroke-opacity=".9" stroke-width="6"/>
+      <circle cx="216" cy="114" r="52" fill="#dbeafe" fill-opacity=".75"/>
+      <path d="M20 340 104 232l61 70 48-51 67 89z" fill="#eff6ff" fill-opacity=".88"/>
+    </g>
+  </g>
+</svg>

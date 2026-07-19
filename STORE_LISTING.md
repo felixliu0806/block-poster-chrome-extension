@@ -1,8 +1,8 @@
-# Chrome Web Store draft
+# Chrome Web Store submission copy
 
 ## Name
 
-Block Poster – Web Image to Printable Poster
+Block Poster
 
 ## Summary
 
@@ -28,7 +28,7 @@ watermark-free exports.
 
 Everyone can scan the current page for useful images, filter out small assets
 and duplicates, and download up to 5 watermarked posters in one ZIP file. Pro
-and Lifetime members can download up to 20 watermark-free posters per batch.
+and Lifetime members can download up to 30 watermark-free posters per batch.
 
 Block Poster does not save a creation history or upload a gallery of your
 images. Poster rendering happens locally in the extension. Account connection
@@ -37,7 +37,7 @@ extension.
 
 ## Store fields
 
-- Category: Tools
+- Category: Art & Design
 - Language: English
 - Homepage URL: `https://blockposter.pro/`
 - Support URL: `https://blockposter.pro/support`
@@ -68,8 +68,30 @@ PDFs.
   history is stored.
 - `contextMenus`: Offer a shortcut for opening Block Poster from the page.
   Right-clicking an image imports that image; right-clicking the page starts a
-  page scan for eligible paid accounts.
+  user-requested page scan.
 - Required host access to `blockposter.pro`: Connect an existing account and
   check paid export entitlements.
-- Optional host access: Download only the image origins selected by a paid user
-  for a batch. It is requested at the moment the batch is created.
+- Optional host access: Download only the image origins selected by the user
+  for a batch. It is requested at export time and only for those origins.
+
+## Privacy dashboard disclosures
+
+- Website content: Yes. The extension locally processes images and dimensions
+  only after the user selects, captures, pastes, uploads, or scans a page.
+- Authentication information: Yes. A scoped Block Poster account token is
+  stored to verify paid export entitlements. The extension does not receive a
+  password, payment card details, or website cookies.
+- Personally identifiable information: No account profile fields are read by
+  the extension. The scoped token identifies the connected account to the
+  Block Poster API.
+- Data use certification: Data is used only to provide the user-facing poster
+  workflow. It is not sold, used for personalized advertising, used for credit
+  decisions, or made available for unrelated human review.
+
+## Graphic assets
+
+- Store icon: 128 × 128 PNG, derived from the Block Poster website favicon.
+- Screenshots: five 1280 × 800 PNG or JPEG images; see
+  `STORE_SCREENSHOTS.md`.
+- Small promo tile: 440 × 280 PNG or JPEG.
+- Marquee promo tile: 1400 × 560 PNG or JPEG.

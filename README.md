@@ -64,7 +64,7 @@ invoked.
   reused rather than duplicated in extension storage.
 - Single-export credit is consumed only for a successful clean export.
 - Pro and lifetime plans unlock clean exports and increase batches from 5
-  watermarked posters to 20 watermark-free posters.
+  watermarked posters to 30 watermark-free posters.
 - Source images and output PDFs are session-only. Any server-side handoff must
   use short-lived storage and expiring URLs.
 
@@ -112,9 +112,10 @@ The free capture and watermarked export workflow works without the website
 running. Account connection requires the companion API routes from the private
 Block Poster website repository to be deployed to `https://blockposter.pro`.
 
-For local account-connection development, temporarily change `APP_ORIGIN` at
-the top of `sidepanel.js` to the local Next.js origin. The manifest already
-allows `http://localhost/*` for the connection bridge.
+The production manifest contains no localhost host access. For local account
+connection development, temporarily change `APP_ORIGIN` at the top of
+`sidepanel.js`, add the exact localhost origin to both `host_permissions` and
+the connection bridge match list, then remove it before packaging a release.
 
 ## Privacy and storage
 

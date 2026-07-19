@@ -1,12 +1,12 @@
 # Block Poster Chrome Extension Privacy Disclosure
 
-Last updated: July 16, 2026
+Last updated: July 19, 2026
 
 ## Data used by the extension
 
 Block Poster processes images that the user explicitly selects, captures,
-uploads, or pastes. It also reads basic image URLs and dimensions when a Pro or
-Lifetime user explicitly asks it to scan the current page.
+uploads, or pastes. It also reads basic image URLs and dimensions when a user
+explicitly asks it to scan the current page.
 
 ## How images are processed
 
@@ -41,6 +41,15 @@ extension receives only the resulting plan and export-entitlement information.
 
 Block Poster does not sell extension data and does not use selected images,
 page contents, or browsing activity for advertising or credit decisions.
+
+## Chrome Web Store Limited Use
+
+Information received through Chrome extension permissions is used only to
+provide or improve the user-facing Block Poster workflow. It is not transferred
+for unrelated purposes, used for personalized or interest-based advertising,
+or made available for human review except when the user gives specific consent
+for support, when required for security or legal compliance, or when the data
+has been aggregated and anonymized for internal operations.
 
 ## User control
 
