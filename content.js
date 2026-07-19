@@ -14,7 +14,15 @@
       viewportWidth: window.innerWidth,
       viewportHeight: window.innerHeight,
       devicePixelRatio: window.devicePixelRatio || 1,
+      scrollX: window.scrollX,
+      scrollY: window.scrollY,
     };
+  }
+
+  function sendAfterOverlayPaint(message) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => chrome.runtime.sendMessage(message));
+    });
   }
 
   function getBackgroundUrl(element) {
@@ -83,7 +91,7 @@
       event.preventDefault();
       event.stopImmediatePropagation();
       const rect = current.element.getBoundingClientRect();
-      chrome.runtime.sendMessage({
+      const message = {
         type: "PAGE_IMAGE_PICKED",
         sourceUrl: current.src,
         name: current.name,
@@ -102,8 +110,9 @@
           ),
         },
         ...pageMetrics(),
-      });
+      };
       resetMode();
+      sendAfterOverlayPaint(message);
     };
     const keydown = (event) => {
       if (event.key === "Escape") resetMode();
@@ -126,17 +135,29 @@
     const overlay = document.createElement("div");
     const selection = document.createElement("div");
     const hint = document.createElement("div");
+    const pageWidth = Math.max(
+      document.documentElement.scrollWidth,
+      document.body?.scrollWidth || 0,
+      window.innerWidth,
+    );
+    const pageHeight = Math.max(
+      document.documentElement.scrollHeight,
+      document.body?.scrollHeight || 0,
+      window.innerHeight,
+    );
     overlay.style.cssText =
-      "position:fixed;inset:0;z-index:2147483645;background:rgba(16,16,20,.2);cursor:crosshair";
+      `position:absolute;left:0;top:0;width:${pageWidth}px;height:${pageHeight}px;z-index:2147483645;background:rgba(16,16,20,.2);cursor:crosshair;touch-action:none`;
     selection.style.cssText =
-      "position:fixed;z-index:2147483646;pointer-events:none;border:2px solid #6558f5;background:rgba(101,88,245,.12);display:none;box-sizing:border-box";
-    hint.textContent = "Drag to capture · Esc to cancel";
+      "position:absolute;z-index:2147483646;pointer-events:none;border:2px solid #6558f5;background:rgba(101,88,245,.12);display:none;box-sizing:border-box";
+    hint.textContent = "Drag to capture · Scroll for more · Esc to cancel";
     hint.style.cssText =
       "position:fixed;z-index:2147483647;left:50%;top:18px;transform:translateX(-50%);padding:9px 14px;border-radius:999px;background:#17171b;color:white;font:600 13px/1.2 -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.25);pointer-events:none";
     document.documentElement.append(overlay, selection, hint);
 
     let start = null;
     let rect = null;
+    let pointerId = null;
+    let lastClientPoint = null;
     const setRect = (x, y) => {
       const left = Math.min(start.x, x);
       const top = Math.min(start.y, y);
@@ -153,24 +174,41 @@
       selection.style.height = `${rect.height}px`;
     };
     const down = (event) => {
-      start = { x: event.clientX, y: event.clientY };
-      setRect(event.clientX, event.clientY);
+      pointerId = event.pointerId;
+      lastClientPoint = { x: event.clientX, y: event.clientY };
+      start = { x: event.pageX, y: event.pageY };
+      overlay.setPointerCapture(pointerId);
+      setRect(event.pageX, event.pageY);
     };
     const move = (event) => {
-      if (start) setRect(event.clientX, event.clientY);
+      if (!start) return;
+      lastClientPoint = { x: event.clientX, y: event.clientY };
+      setRect(event.pageX, event.pageY);
     };
     const up = (event) => {
       if (!start) return;
-      setRect(event.clientX, event.clientY);
+      setRect(event.pageX, event.pageY);
+      const message = {
+        type: "PAGE_REGION_PICKED",
+        name: "screen-capture",
+        rect,
+        documentWidth: pageWidth,
+        documentHeight: pageHeight,
+        ...pageMetrics(),
+      };
       if (rect.width >= 10 && rect.height >= 10) {
-        chrome.runtime.sendMessage({
-          type: "PAGE_REGION_PICKED",
-          name: "screen-capture",
-          rect,
-          ...pageMetrics(),
-        });
+        resetMode();
+        sendAfterOverlayPaint(message);
+        return;
       }
       resetMode();
+    };
+    const scroll = () => {
+      if (!start || !lastClientPoint) return;
+      setRect(
+        lastClientPoint.x + window.scrollX,
+        lastClientPoint.y + window.scrollY,
+      );
     };
     const keydown = (event) => {
       if (event.key === "Escape") resetMode();
@@ -178,11 +216,16 @@
     overlay.addEventListener("pointerdown", down, true);
     overlay.addEventListener("pointermove", move, true);
     overlay.addEventListener("pointerup", up, true);
+    window.addEventListener("scroll", scroll, true);
     document.addEventListener("keydown", keydown, true);
     cleanupCurrentMode = () => {
+      if (pointerId != null && overlay.hasPointerCapture(pointerId)) {
+        overlay.releasePointerCapture(pointerId);
+      }
       overlay.remove();
       selection.remove();
       hint.remove();
+      window.removeEventListener("scroll", scroll, true);
       document.removeEventListener("keydown", keydown, true);
     };
     return { started: true };

@@ -6,6 +6,7 @@
 - Store icon: `store-assets/icon-128.png`
 - Small promo tile: `store-assets/promo-small.png`
 - Marquee promo tile: `store-assets/promo-marquee.png`
+- Five upload-ready screenshots: `store-assets/screenshots/`
 - Listing copy and permission explanations: `STORE_LISTING.md`
 - Screenshot plan: `STORE_SCREENSHOTS.md`
 

@@ -80,6 +80,18 @@ function showToast(message, error = false) {
   );
 }
 
+function setActiveSourceButton(activeButton) {
+  for (const button of [
+    elements.pickImageButton,
+    elements.captureButton,
+    elements.uploadButton,
+    elements.pasteButton,
+    elements.scanButton,
+  ]) {
+    button.classList.toggle("primary", button === activeButton);
+  }
+}
+
 async function sendMessage(message) {
   const response = await chrome.runtime.sendMessage(message);
   if (!response?.ok)
@@ -243,9 +255,77 @@ async function cropCapture(dataUrl, capture) {
   await setSource(objectUrl, `${safeFilename(capture.name)}.png`, true);
 }
 
+async function stitchRegionCapture(captures, capture) {
+  if (!captures?.length) {
+    throw new Error("The selected area could not be captured.");
+  }
+  const decoded = await Promise.all(
+    captures.map(async (item) => {
+      const image = new Image();
+      image.src = item.dataUrl;
+      await image.decode();
+      return { ...item, image };
+    }),
+  );
+  const scaleX = decoded[0].image.naturalWidth / decoded[0].viewportWidth;
+  const scaleY = decoded[0].image.naturalHeight / decoded[0].viewportHeight;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(capture.rect.width * scaleX));
+  canvas.height = Math.max(1, Math.round(capture.rect.height * scaleY));
+  const context = canvas.getContext("2d");
+
+  for (const item of decoded) {
+    const viewportRight = item.scrollX + item.viewportWidth;
+    const viewportBottom = item.scrollY + item.viewportHeight;
+    const captureRight = capture.rect.left + capture.rect.width;
+    const captureBottom = capture.rect.top + capture.rect.height;
+    const left = Math.max(capture.rect.left, item.scrollX);
+    const top = Math.max(capture.rect.top, item.scrollY);
+    const right = Math.min(captureRight, viewportRight);
+    const bottom = Math.min(captureBottom, viewportBottom);
+    if (right <= left || bottom <= top) continue;
+
+    const sourceX = Math.round((left - item.scrollX) * scaleX);
+    const sourceY = Math.round((top - item.scrollY) * scaleY);
+    const sourceWidth = Math.round((right - left) * scaleX);
+    const sourceHeight = Math.round((bottom - top) * scaleY);
+    const targetX = Math.round((left - capture.rect.left) * scaleX);
+    const targetY = Math.round((top - capture.rect.top) * scaleY);
+    context.drawImage(
+      item.image,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      targetX,
+      targetY,
+      sourceWidth,
+      sourceHeight,
+    );
+  }
+
+  const blob = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/png"),
+  );
+  if (!blob) throw new Error("Unable to create the selected image.");
+  const objectUrl = URL.createObjectURL(blob);
+  await setSource(objectUrl, `${safeFilename(capture.name)}.png`, true);
+}
+
 async function handlePageCapture(message) {
   try {
     if (message.error) throw new Error(message.error);
+    if (message.type === "PAGE_REGION_PICKED") {
+      showToast("Capturing selected area…");
+      const captures = await sendMessage({
+        type: "CAPTURE_PAGE_REGION",
+        tabId: message.tabId,
+        capture: message,
+      });
+      await stitchRegionCapture(captures, message);
+      showToast("Screen area captured.");
+      return;
+    }
     const screenshot = await sendMessage({
       type: "CAPTURE_VISIBLE_TAB",
       tabId: message.tabId,
@@ -948,6 +1028,7 @@ function renderScanResults() {
 }
 
 async function scanPage() {
+  setActiveSourceButton(elements.scanButton);
   const original = elements.scanButton.innerHTML;
   try {
     elements.scanButton.disabled = true;
@@ -1002,19 +1083,22 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
-elements.pickImageButton.addEventListener("click", () =>
+elements.pickImageButton.addEventListener("click", () => {
+  setActiveSourceButton(elements.pickImageButton);
   sendMessage({ type: "START_IMAGE_PICK" }).catch((error) =>
     showToast(error.message, true),
-  ),
-);
-elements.captureButton.addEventListener("click", () =>
+  );
+});
+elements.captureButton.addEventListener("click", () => {
+  setActiveSourceButton(elements.captureButton);
   sendMessage({ type: "START_REGION_CAPTURE" }).catch((error) =>
     showToast(error.message, true),
-  ),
-);
-elements.uploadButton.addEventListener("click", () =>
-  elements.fileInput.click(),
-);
+  );
+});
+elements.uploadButton.addEventListener("click", () => {
+  setActiveSourceButton(elements.uploadButton);
+  elements.fileInput.click();
+});
 elements.fileInput.addEventListener("change", async () => {
   try {
     await readFile(elements.fileInput.files?.[0]);
@@ -1026,6 +1110,7 @@ elements.fileInput.addEventListener("change", async () => {
   }
 });
 elements.pasteButton.addEventListener("click", async () => {
+  setActiveSourceButton(elements.pasteButton);
   try {
     const items = await navigator.clipboard.read();
     const item = items.find((entry) =>

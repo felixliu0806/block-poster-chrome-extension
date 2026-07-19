@@ -96,6 +96,100 @@ async function sendToTab(tabId, type, payload = {}) {
   return { ...result, tabId };
 }
 
+function capturePositions(start, size, viewportSize, maximumScroll) {
+  const end = start + size;
+  const positions = [Math.max(0, Math.min(start, maximumScroll))];
+  while (
+    positions[positions.length - 1] + viewportSize < end &&
+    positions.length < 20
+  ) {
+    const current = positions[positions.length - 1];
+    const next = Math.max(
+      0,
+      Math.min(current + viewportSize, end - viewportSize, maximumScroll),
+    );
+    if (next <= current) break;
+    positions.push(next);
+  }
+  return positions;
+}
+
+async function scrollTab(tabId, left, top) {
+  const [result] = await chrome.scripting.executeScript({
+    target: { tabId },
+    func: async (x, y) => {
+      window.scrollTo(x, y);
+      await new Promise((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(resolve)),
+      );
+      return {
+        scrollX: window.scrollX,
+        scrollY: window.scrollY,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
+      };
+    },
+    args: [left, top],
+  });
+  return result.result;
+}
+
+async function capturePageRegion(tab, capture) {
+  const initialPosition = await scrollTab(
+    tab.id,
+    capture.scrollX,
+    capture.scrollY,
+  );
+  const maximumScrollX = Math.max(
+    0,
+    capture.documentWidth - capture.viewportWidth,
+  );
+  const maximumScrollY = Math.max(
+    0,
+    capture.documentHeight - capture.viewportHeight,
+  );
+  const xPositions = capturePositions(
+    capture.rect.left,
+    capture.rect.width,
+    capture.viewportWidth,
+    maximumScrollX,
+  );
+  const yPositions = capturePositions(
+    capture.rect.top,
+    capture.rect.height,
+    capture.viewportHeight,
+    maximumScrollY,
+  );
+  if (xPositions.length * yPositions.length > 20) {
+    throw new Error(
+      "This capture area is too large. Select a smaller area and try again.",
+    );
+  }
+
+  const captures = [];
+  try {
+    for (const top of yPositions) {
+      for (const left of xPositions) {
+        const position = await scrollTab(tab.id, left, top);
+        if (captures.length) {
+          await new Promise((resolve) => setTimeout(resolve, 550));
+        }
+        const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {
+          format: "png",
+        });
+        captures.push({ ...position, dataUrl });
+      }
+    }
+  } finally {
+    await scrollTab(
+      tab.id,
+      initialPosition.scrollX,
+      initialPosition.scrollY,
+    ).catch(() => undefined);
+  }
+  return captures;
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (!message?.type) return false;
 
@@ -122,6 +216,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           );
         }
         return chrome.tabs.captureVisibleTab(tab.windowId, { format: "png" });
+      }
+      case "CAPTURE_PAGE_REGION": {
+        const tab = await getActiveTab();
+        if (message.tabId && tab.id !== message.tabId) {
+          throw new Error(
+            "This is a different tab. Return to the page where you selected the area, or start again from this tab.",
+          );
+        }
+        return capturePageRegion(tab, message.capture);
       }
       case "OPEN_TAB": {
         if (!message.url) throw new Error("A URL is required.");

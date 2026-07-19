@@ -1,23 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
-  <defs>
-    <radialGradient id="glow" cx="80%" cy="18%" r="75%">
-      <stop offset="0" stop-color="#2563eb" stop-opacity=".9"/>
-      <stop offset="1" stop-color="#050505" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <rect width="440" height="280" fill="#050505"/>
-  <rect width="440" height="280" fill="url(#glow)"/>
-  <g transform="translate(32 30) scale(1.2)">
-    <rect width="64" height="64" rx="12" fill="#050505" stroke="#404040"/>
-    <rect x="14" y="12" width="32" height="40" rx="3" fill="#fff"/>
-    <path d="M14 25h32M14 38h32M25 12v40M36 12v40" stroke="#050505" stroke-width="3"/>
-    <rect x="38" y="35" width="12" height="16" rx="2" fill="#60a5fa" stroke="#050505" stroke-width="2"/>
-  </g>
-  <text x="32" y="154" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700">Block Poster</text>
-  <text x="32" y="190" fill="#d4d4d8" font-family="Arial, Helvetica, sans-serif" font-size="16">Web images → printable posters</text>
-  <g transform="translate(304 108) rotate(-5)" opacity=".9">
-    <rect width="94" height="124" rx="8" fill="#fff"/>
-    <path d="M31 0v124M63 0v124M0 41h94M0 83h94" stroke="#18181b" stroke-width="3"/>
-    <rect x="64" y="84" width="26" height="36" rx="4" fill="#60a5fa"/>
-  </g>
+  <image href="promo-small-scene.png" width="440" height="280" preserveAspectRatio="xMinYMid slice"/>
+  <rect y="214" width="440" height="66" fill="#050505" fill-opacity=".58"/>
+  <image href="../icons/icon-128.png" x="16" y="227" width="40" height="40"/>
+  <text x="68" y="240" fill="#fff" font-family="Verdana, Arial, sans-serif" font-size="19" font-weight="700">Block Poster</text>
+  <text x="68" y="260" fill="#fff" fill-opacity=".88" font-family="Verdana, Arial, sans-serif" font-size="11.5">Turn any web image into wall-sized art.</text>
 </svg>
